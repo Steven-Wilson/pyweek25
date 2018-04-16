@@ -5,8 +5,8 @@ import pyxelen.api as api
 
 
 TITLE = 'pyweek25'
-WIDTH = 2 * 16 * 16
-HEIGHT = 2 * 9 * 16
+WIDTH = 512
+HEIGHT = 288
 
 
 tilesize = api.Size(w=16, h=16)
@@ -21,6 +21,17 @@ images = [
         clip=api.Box(size=tilesize, position=position)
     ) for position in offsets
 ]
+
+MENU_ICONS = {
+    'left-arrow': api.Image(
+        filename='images/menu-icons.png',
+        clip=api.Box(size=tilesize, position=api.Position(x=0, y=0))
+    ),
+    'right-arrow': api.Image(
+        filename='images/menu-icons.png',
+        clip=api.Box(size=tilesize, position=api.Position(x=16, y=0))
+    )
+}
 
 
 MAIN_FONT = {
@@ -99,10 +110,15 @@ class DirtBackground(api.Texture):
 DIRT_BACKGROUND = DirtBackground(uid=1, size=512)
 
 
-class Model(api.Model):
+class WorldMap(api.Model):
+
+    last_screen = api.field(type=api.Model, mandatory=True)
 
     def on_update(self, controls):
         return self.set(music="music/25 - Finale.ogg")
+
+    def on_key_down(self, key, modifiers):
+        return self.last_screen
 
     def draw(self, renderer):
         renderer.draw_image(
@@ -115,18 +131,63 @@ class Model(api.Model):
             ),
             api.Position(x=0, y=0)
         )
+
+
+class Menu(api.Model):
+
+    OPTIONS = [
+        'START NEW GAME',
+        'OPTIONS',
+        'CREDITS'
+    ]
+
+    selected = api.field(type=int, mandatory=True)
+
+    def on_update(self, controls):
+        return self
+
+    def on_key_down(self, key, modifiers):
+        if key == api.Key.DOWN:
+            return self.set(selected=(self.selected + 1) % len(self.OPTIONS))
+        elif key == api.Key.UP:
+            return self.set(selected=(self.selected - 1) % len(self.OPTIONS))
+        elif key in [api.Key.RETURN, api.Key.KP_ENTER, api.Key.SPACE]:
+            return WorldMap(last_screen=self)
+        else:
+            return self
+
+    def draw(self, renderer):
+        # renderer.draw_image(
+        #     api.Image(
+        #         filename='images/dialog.png',
+        #         clip=api.Box(
+        #             size=api.Size(w=240, h=75),
+        #             position=api.Position(x=0, y=0)
+        #         )
+        #     ),
+        #     api.Position(x=10, y=10)
+        # )
+        # draw_text('The quick brown fox jumps over', renderer, 20, 20)
+        # draw_text('the lazy dog!', renderer, 20, 30)
         renderer.draw_image(
             api.Image(
-                filename='images/dialog.png',
+                filename='images/menu.png',
                 clip=api.Box(
-                    size=api.Size(w=240, h=75),
+                    size=api.Size(w=512, h=288),
                     position=api.Position(x=0, y=0)
                 )
             ),
-            api.Position(x=10, y=10)
+            api.Position(x=0, y=0)
         )
-        draw_text('The quick brown fox jumps over', renderer, 20, 20)
-        draw_text('the lazy dog!', renderer, 20, 30)
+
+        for i, option in enumerate(self.OPTIONS):
+            draw_text(option, renderer, 256 - 48, 164 + 20 * i)
+
+            if i == self.selected:
+                renderer.draw_image(
+                    MENU_ICONS['left-arrow'],
+                    position=api.Position(x=256 - 70, y=159 + 20 * i)
+                )
 
 
-pyxelen.run('pyweek25', WIDTH, HEIGHT, Model(), 40)
+pyxelen.run('Runia Chronicles', WIDTH, HEIGHT, Menu(selected=0), 40)
