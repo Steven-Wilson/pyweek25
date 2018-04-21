@@ -1,9 +1,0 @@
-attribution:
-
-cave.png
-desert.png
-sewer_1.png
-Art by MrBeast. Commissioned by OpenGameArt.org (http://opengameart.org)
-
-charsets
-Art by Charles Gabriel. Commissioned by OpenGameArt.org (http://opengameart.org)
